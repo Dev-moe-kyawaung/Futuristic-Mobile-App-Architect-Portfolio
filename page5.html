@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Architecture Lab — Moe Kyaw</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Orbitron:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/global.css" />
+  <link rel="stylesheet" href="assets/css/components.css" />
+  <link rel="stylesheet" href="assets/css/animations.css" />
+  <link rel="stylesheet" href="assets/css/responsive.css" />
+</head>
+<body>
+  <canvas id="particleCanvas" class="particle-canvas"></canvas>
+
+  <nav class="nav-glass glass-panel floating-ui">
+    <a class="nav-link" href="index.html" data-i18n="navHome">Home</a>
+    <a class="nav-link" href="page2.html" data-i18n="navSkills">Skills</a>
+    <a class="nav-link" href="page3.html">Roadmap</a>
+    <a class="nav-link" href="page4.html">Compose</a>
+    <a class="nav-link" href="page5.html" data-i18n="navArchitecture">Architecture</a>
+    <a class="nav-link" href="page6.html" data-i18n="navPerformance">Performance</a>
+    <a class="nav-link" href="page7.html" data-i18n="navCICD">CI/CD</a>
+    <button id="langToggle" class="lang-toggle">🇲🇲 MM</button>
+  </nav>
+
+  <main class="container section-padding">
+    <section class="section-header cinematic-fade">
+      <h1 class="section-title" data-i18n="architectureTitle">Architecture Lab</h1>
+      <p class="section-subtitle">Clean Architecture, modular design patterns, and scalable system design for production Android applications.</p>
+    </section>
+
+    <section class="glass-panel cinematic-fade" style="padding: 40px; margin-bottom: 32px;">
+      <h2 style="margin-bottom: 24px; color: var(--neon-aqua);">Clean Architecture Layers</h2>
+      <p style="color: var(--text-secondary); line-height: 1.7; margin-bottom: 32px;">
+        A robust separation of concerns ensuring testability, maintainability, and independence from frameworks, UI, and databases.
+      </p>
+
+      <div class="arch-diagram">
+        <div class="arch-layer">
+          <h4>📱 Presentation Layer</h4>
+          <ul>
+            <li>Jetpack Compose UI</li>
+            <li>ViewModel (MVVM/MVI)</li>
+            <li>StateFlow & UI State</li>
+            <li>Navigation Compose</li>
+            <li>UI Testing (Compose)</li>
+          </ul>
+        </div>
+
+        <div class="arch-layer">
+          <h4>⚙️ Domain Layer</h4>
+          <ul>
+            <li>Use Cases / Interactors</li>
+            <li>Domain Models</li>
+            <li>Repository Interfaces</li>
+            <li>Business Logic</li>
+            <li>Pure Kotlin (no Android)</li>
+          </ul>
+        </div>
+
+        <div class="arch-layer">
+          <h4>💾 Data Layer</h4>
+          <ul>
+            <li>Repository Implementations</li>
+            <li>Room Database</li>
+            <li>DataStore / Preferences</li>
+            <li>Retrofit / Ktor Client</li>
+            <li>Data Models & DTOs</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="code-block">
+<pre>// Domain Layer - Use Case
+class GetUserProfileUseCase(
+  private val userRepository: UserRepository
+) {
+  suspend operator fun invoke(userId: String): Result&lt;UserProfile&gt; {
+    return userRepository.getUserProfile(userId)
+      .map { it.toDomainModel() }
+  }
+}
+
+// Data Layer - Repository Implementation
+class UserRepositoryImpl(
+  private val userDao: UserDao,
+  private val userApi: UserApi
+) : UserRepository {
+  override suspend fun getUserProfile(userId: String): Result&lt;UserEntity&gt; {
+    return try {
+      val cached = userDao.getUser(userId)
+      if (cached != null) {
+        Result.success(cached)
+      } else {
+        val remote = userApi.fetchUser(userId)
+        userDao.insertUser(remote.toEntity())
+        Result.success(remote.toEntity())
+      }
+    } catch (e: Exception) {
+      Result.failure(e)
+    }
+  }
+}
+
+// Presentation Layer - ViewModel
+@HiltViewModel
+class ProfileViewModel @Inject constructor(
+  private val getUserProfile: GetUserProfileUseCase
+) : ViewModel() {
+  private val _uiState = MutableStateFlow&lt;ProfileUiState&gt;(ProfileUiState.Loading)
+  val uiState: StateFlow&lt;ProfileUiState&gt; = _uiState.asStateFlow()
+
+  init {
+    loadUserProfile()
+  }
+
+  private fun loadUserProfile() {
+    viewModelScope.launch {
+      _uiState.value = ProfileUiState.Loading
+      getUserProfile("user123")
+        .onSuccess { profile ->
+          _uiState.value = ProfileUiState.Success(profile.toUiModel())
+        }
+        .onFailure { error ->
+          _uiState.value = ProfileUiState.Error(error.message)
+        }
+    }
+  }
+}</pre>
+      </div>
+    </section>
+
+    <section class="glass-panel cinematic-fade" style="padding: 40px; margin-bottom: 32px;">
+      <h2 style="margin-bottom: 24px; color: var(--neon-pink);">Modularization Strategy</h2>
+      <p style="color: var(--text-secondary); line-height: 1.7; margin-bottom: 32px;">
+        Multi-module architecture for improved build times, team scalability, and feature isolation.
+      </p>
+
+      <div class="content-grid">
+        <div class="info-card">
+          <h3>📦 :app Module</h3>
+          <p>Application entry point, dependency injection setup, and app-level configuration. Minimal code, primarily wiring.</p>
+        </div>
+
+        <div class="info-card">
+          <h3>🎨 :feature:* Modules</h3>
+          <p>Self-contained feature modules (home, profile, settings) with their own UI, ViewModel, and navigation graphs.</p>
+        </div>
+
+        <div class="info-card">
+          <h3>🧩 :core:* Modules</h3>
+          <p>Shared utilities: network, database, UI components, analytics, and common business logic.</p>
+        </div>
+
+        <div class="info-card">
+          <h3>🔌 :dynamic-feature Modules</h3>
+          <p>On-demand features delivered via Play Feature Delivery for reduced initial APK size.</p>
+        </div>
+
+        <div class="info-card">
+          <h3>📊 :benchmark Module</h3>
+          <p>Isolated performance testing module for startup, memory, and rendering benchmarks.</p>
+        </div>
+
+        <div class="info-card">
+          <h3>🧪 :testing Module</h3>
+          <p>Shared test utilities, mocks, and testing infrastructure across all modules.</p>
+        </div>
+      </div>
+
+      <div class="code-block" style="margin-top: 32px;">
+<pre>// settings.gradle.kts
+dependencyResolutionManagement {
+  repositories {
+    google()
+    mavenCentral()
+  }
+  versionCatalogs {
+    create("libs") {
+      from("com.android.catalog:libs:2024.01")
+    }
+  }
+}
+
+include(
+  ":app",
+  ":feature:home",
+  ":feature:profile",
+  ":feature:settings",
+  ":core:network",
+  ":core:database",
+  ":core:ui",
+  ":core:analytics",
+  ":dynamic:onboarding",
+  ":benchmark",
+  ":testing"
+)
+
+// Module dependency graph (Gradle build):
+// :app → :feature:* → :core:* → :testing
+// :feature:* should NOT depend on other :feature:* modules</pre>
+      </div>
+    </section>
+
+    <section class="glass-panel cinematic-fade" style="padding: 40px;">
+      <h2 style="margin-bottom: 24px; color: var(--neon-lime);">Dependency Injection Architecture</h2>
+      <p style="color: var(--text-secondary); line-height: 1.7; margin-bottom: 32px;">
+        Hilt for compile-time DI with clear scoping and module organization across the multi-module structure.
+      </p>
+
+      <div class="arch-diagram">
+        <div class="arch-layer">
+          <h4>🏗️ AppModule</h4>
+          <ul>
+            <li>@Singleton scope</li>
+            <li>Retrofit instance</li>
+            <li>Database instance</li>
+            <li>Analytics tracker</li>
+            <li>App-wide dependencies</li>
+          </ul>
+        </div>
+
+        <div class="arch-layer">
+          <h4>📦 Feature Modules</h4>
+          <ul>
+            <li>@ViewModelScoped</li>
+            <li>Use case bindings</li>
+            <li>Repository implementations</li>
+            <li>Feature-specific deps</li>
+            <li>Isolated from other features</li>
+          </ul>
+        </div>
+
+        <div class="arch-layer">
+          <h4>🧩 Core Modules</h4>
+          <ul>
+            <li>@InstallIn(SingletonComponent::class)</li>
+            <li>Network module</li>
+            <li>Database module</li>
+            <li>UI component providers</li>
+            <li>Reusable across features</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="code-block" style="margin-top: 32px;">
+<pre>// :core:network - NetworkModule.kt
+@Module
+@InstallIn(SingletonComponent::class)
+object NetworkModule {
+
+  @Provides
+  @Singleton
+  fun provideRetrofit(
+    @ApplicationContext context: Context,
+    okHttpClient: OkHttpClient
+  ): Retrofit {
+    return Retrofit.Builder()
+      .baseUrl("https://api.example.com/")
+      .client(okHttpClient)
+      .addConverterFactory(MoshiConverterFactory.create())
+      .build()
+  }
+
+  @Provides
+  @Singleton
+  fun provideOkHttpClient(
+    logger: HttpLoggingInterceptor
+  ): OkHttpClient {
+    return OkHttpClient.Builder()
+      .addInterceptor(logger)
+      .addInterceptor(ConnectivityInterceptor())
+      .connectTimeout(30, TimeUnit.SECONDS)
+      .readTimeout(30, TimeUnit.SECONDS)
+      .build()
+  }
+
+  @Provides
+  @Singleton
+  fun provideApiService(retrofit: Retrofit): UserApi {
+    return retrofit.create(UserApi::class.java)
+  }
+}
+
+// :feature:profile - ProfileModule.kt
+@Module
+@InstallIn(ViewModelComponent::class)
+abstract class ProfileModule {
+
+  @Binds
+  @ViewModelScoped
+  abstract fun bindUserProfileRepository(
+    impl: UserProfileRepositoryImpl
+  ): UserProfileRepository
+
+  @Binds
+  @ViewModelScoped
+  abstract fun bindGetUserProfileUseCase(
+    impl: GetUserProfileUseCase
+  ): GetUserProfileUseCase
+}</pre>
+      </div>
+    </section>
+
+    <section class="glass-panel cinematic-fade" style="padding: 40px; margin-top: 32px;">
+      <h2 style="margin-bottom: 24px; color: var(--neon-aqua);">State Management Patterns</h2>
+      <p style="color: var(--text-secondary); line-height: 1.7; margin-bottom: 32px;">
+        Unidirectional data flow with StateFlow, sealed classes for UI state, and event handling for one-time actions.
+      </p>
+
+      <div class="content-grid">
+        <div class="info-card">
+          <h3>🔀 MVI Pattern</h3>
+          <p>Model-View-Intent: User actions (Intents) update state through ViewModels, UI reacts to state changes.</p>
+        </div>
+
+        <div class="info-card">
+          <h3>📊 StateFlow</h3>
+          <p>Hot streams for UI state, lifecycle-aware, composable with coroutines, and testable.</p>
+        </div>
+
+        <div class="info-card">
+          <h3>🎯 Sealed UI States</h3>
+          <p>Type-safe state representation: Loading, Success(data), Error(message), Empty.</p>
+        </div>
+
+        <div class="info-card">
+          <h3>⚡ Channel for Events</h3>
+          <p>One-time events (navigation, snacks) via Channel or SharedFlow with extraBufferCapacity.</p>
+        </div>
+      </div>
+
+      <div class="code-block" style="margin-top: 32px;">
+<pre>// UI State definition
+sealed class ProfileUiState {
+  object Loading : ProfileUiState()
+  data class Success(val profile: ProfileUiModel) : ProfileUiState()
+  data class Error(val message: String) : ProfileUiState()
+  object Empty : ProfileUiState()
+}
+
+// Event handling with Channel
+class ProfileViewModel @Inject constructor(
+  private val getUserProfile: GetUserProfileUseCase,
+  private val updateProfile: UpdateProfileUseCase
+) : ViewModel() {
+  
+  private val _uiState = MutableStateFlow&lt;ProfileUiState&gt;(ProfileUiState.Loading)
+  val uiState: StateFlow&lt;ProfileUiState&gt; = _uiState.asStateFlow()
+
+  private val _events = Channel&lt;ProfileEvent&gt;()
+  val events: Flow&lt;ProfileEvent&gt; = _events.receiveAsFlow()
+
+  sealed class ProfileEvent {
+    data class NavigateToEdit(val userId: String) : ProfileEvent()
+    data class ShowSnackbar(val message: String) : ProfileEvent()
+    object NavigateBack : ProfileEvent()
+  }
+
+  fun onIntent(intent: ProfileIntent) {
+    when (intent) {
+      is ProfileIntent.LoadProfile -> loadProfile(intent.userId)
+      is ProfileIntent.UpdateProfile -> updateProfile(intent.userId, intent.data)
+      is ProfileIntent.EditProfile -> navigateToEdit(intent.userId)
+    }
+  }
+
+  private fun loadProfile(userId: String) {
+    viewModelScope.launch {
+      _uiState.value = ProfileUiState.Loading
+      getUserProfile(userId)
+        .onSuccess { profile ->
+          _uiState.value = ProfileUiState.Success(profile.toUiModel())
+        }
+        .onFailure { error ->
+          _uiState.value = ProfileUiState.Error(error.message ?: "Unknown error")
+        }
+    }
+  }
+
+  private suspend fun navigateToEdit(userId: String) {
+    _events.send(ProfileEvent.NavigateToEdit(userId))
+  }
+}
+
+// Compose UI consumption
+@Composable
+fun ProfileScreen(viewModel: ProfileViewModel = hiltViewModel()) {
+  val uiState by viewModel.uiState.collectAsState()
+  val scope = rememberCoroutineScope()
+
+  LaunchedEffect(Unit) {
+    viewModel.events.collect { event ->
+      when (event) {
+        is ProfileEvent.NavigateToEdit -> navController.navigate("edit/${event.userId}")
+        is ProfileEvent.ShowSnackbar -> snackbarHost.showSnackbar(event.message)
+        ProfileEvent.NavigateBack -> navController.popBackStack()
+      }
+    }
+  }
+
+  when (val state = uiState) {
+    is ProfileUiState.Loading -> LoadingIndicator()
+    is ProfileUiState.Success -> ProfileContent(state.profile)
+    is ProfileUiState.Error -> ErrorView(state.message)
+    ProfileUiState.Empty -> EmptyStateView()
+  }
+}</pre>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="assets/js/main.js"></script>
+</body>
+</html>

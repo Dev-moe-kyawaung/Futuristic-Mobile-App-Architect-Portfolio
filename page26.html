@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Play Console & Release Tracks — Moe Kyaw</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Orbitron:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/global.css" />
+  <link rel="stylesheet" href="assets/css/components.css" />
+  <link rel="stylesheet" href="assets/css/animations.css" />
+  <link rel="stylesheet" href="assets/css/responsive.css" />
+</head>
+<body>
+  <canvas id="particleCanvas" class="particle-canvas"></canvas>
+
+  <nav class="nav-glass glass-panel floating-ui">
+    <a class="nav-link" href="index.html">Home</a>
+    <a class="nav-link" href="page2.html">Skills</a>
+    <button id="langToggle" class="lang-toggle">🇲🇲 MM</button>
+  </nav>
+
+  <main class="container section-padding">
+    <section class="section-header cinematic-fade">
+      <h1 class="section-title">Play Console & Release Tracks</h1>
+      <p class="section-subtitle">Staged rollouts, internal testing, and production deployment strategies.</p>
+    </section>
+
+    <section class="glass-panel cinematic-fade" style="padding: 40px;">
+      <h2 style="margin-bottom: 24px; color: var(--neon-pink);">Release Strategy</h2>
+      
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-value">4</div>
+          <div class="stat-label">Release Tracks</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">24h</div>
+          <div class="stat-label">Review Time</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">100%</div>
+          <div class="stat-label">Automation</div>
+        </div>
+      </div>
+
+      <div class="code-block" style="margin-top: 32px;">
+<pre>// Play Store deployment tracks:
+// 1. Internal Testing (immediate)
+// 2. Closed Testing (beta testers)
+// 3. Open Testing (public beta)
+// 4. Production (staged rollout)
+
+// Gradle Play Publisher configuration
+play {
+  serviceAccountCredentials.set(file("play-key.json"))
+  track.set("internal")
+  releaseStatus.set(com.github.triplet.gradle.androidpublisher.ReleaseStatus.COMPLETED)
+  
+  defaultToAppBundles.set(true)
+  commit.set(true)
+  
+  // Staged rollout percentage
+  userFraction.set(0.1) // 10% initially
+}
+
+// Release naming convention
+// {versionName}-{buildType}-{track}
+// 2.4.1-internal, 2.4.1-beta, 2.4.1-production
+
+// Automated release notes
+tasks.register("generateReleaseNotes") {
+  doLast {
+    val lastTag = "git describe --tags --abbrev=0".execute().text.trim()
+    val commits = "git log --oneline $lastTag..HEAD".execute().text
+    
+    file("release-notes.txt").writeText(
+      """
+      ## What's New
+      
+      $commits
+      
+      ## Technical Changes
+      
+      - Dependency updates
+      - Performance improvements
+      - Bug fixes
+      """.trimIndent()
+    )
+  }
+}</pre>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="assets/js/main.js"></script>
+</body>
+</html>

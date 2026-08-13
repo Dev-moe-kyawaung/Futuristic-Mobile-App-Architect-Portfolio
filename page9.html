@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Security & Keystore — Moe Kyaw</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Orbitron:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/global.css" />
+  <link rel="stylesheet" href="assets/css/components.css" />
+  <link rel="stylesheet" href="assets/css/animations.css" />
+  <link rel="stylesheet" href="assets/css/responsive.css" />
+</head>
+<body>
+  <canvas id="particleCanvas" class="particle-canvas"></canvas>
+
+  <nav class="nav-glass glass-panel floating-ui">
+    <a class="nav-link" href="index.html">Home</a>
+    <a class="nav-link" href="page2.html">Skills</a>
+    <a class="nav-link" href="page3.html">Roadmap</a>
+    <a class="nav-link" href="page4.html">Compose</a>
+    <a class="nav-link" href="page5.html">Architecture</a>
+    <a class="nav-link" href="page6.html">Performance</a>
+    <a class="nav-link" href="page7.html">CI/CD</a>
+    <button id="langToggle" class="lang-toggle">🇲🇲 MM</button>
+  </nav>
+
+  <main class="container section-padding">
+    <section class="section-header cinematic-fade">
+      <h1 class="section-title">Security & Keystore</h1>
+      <p class="section-subtitle">Android Keystore, encrypted SharedPreferences, API key protection, and secure network communication.</p>
+    </section>
+
+    <section class="glass-panel cinematic-fade" style="padding: 40px; margin-bottom: 32px;">
+      <h2 style="margin-bottom: 24px; color: var(--neon-lime);">Android Keystore System</h2>
+      
+      <div class="content-grid">
+        <div class="info-card glass-panel">
+          <h3>🔐 Biometric Authentication</h3>
+          <p style="margin-top: 12px;">Fingerprint/Face unlock integration with BiometricPrompt API and fallback mechanisms.</p>
+        </div>
+
+        <div class="info-card glass-panel">
+          <h3>🔑 Encrypted Keys</h3>
+          <p style="margin-top: 12px;">Hardware-backed key generation, AES-256 encryption, and secure key storage.</p>
+        </div>
+
+        <div class="info-card glass-panel">
+          <h3>🛡️ Security Best Practices</h3>
+          <p style="margin-top: 12px;">Certificate pinning, root detection, debugger detection, and anti-tampering measures.</p>
+        </div>
+
+        <div class="info-card glass-panel">
+          <h3>📦 Encrypted DataStore</h3>
+          <p style="margin-top: 12px;">EncryptedSharedPreferences and EncryptedFile for sensitive data persistence.</p>
+        </div>
+      </div>
+
+      <div class="code-block" style="margin-top: 32px;">
+<pre>// Android Keystore - Key Generation
+class SecurityKeyManager @Inject constructor(
+  private val context: Context
+) {
+  private val keyStore by lazy {
+    KeyStore.getInstance("AndroidKeyStore").apply {
+      load(null)
+    }
+  }
+  
+  private val masterKey by lazy {
+    MasterKey.Builder(context)
+      .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+      .build()
+  }
+  
+  fun generateKey(alias: String): SecretKey {
+    val keyGen = KeyGenerator.getInstance(
+      KeyProperties.KEY_ALGORITHM_AES,
+      "AndroidKeyStore"
+    )
+    
+    val keyGenSpec = KeyGenParameterSpec.Builder(
+      alias,
+      KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT
+    )
+      .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
+      .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
+      .setKeySize(256)
+      .setUserAuthenticationRequired(true) // Biometric required
+      .build()
+    
+    keyGen.init(keyGenSpec)
+    return keyGen.generateKey()
+  }
+  
+  fun getKey(alias: String): SecretKey? {
+    return keyStore.getEntry(alias, null) as? KeyStore.SecretKeyEntry
+  }
+}
+
+// Encrypted DataStore
+object EncryptedDataStore {
+  private lateinit var dataStore: DataStore&lt;Preferences&gt;
+  
+  fun initialize(context: Context) {
+    val masterKey = MasterKey.Builder(context)
+      .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+      .build()
+    
+    dataStore = DataStoreFactory.createPreferences(
+      scope = CoroutineScope(Dispatchers.IO + SupervisorJob()),
+      produceFile = { context.preferencesDataStoreFile("secure_prefs") },
+      masterKey = masterKey
+    )
+  }
+  
+  suspend fun saveString(key: Preferences.Key&lt;String&gt;, value: String) {
+    dataStore.edit { preferences ->
+      preferences[key] = value
+    }
+  }
+  
+  suspend fun getString(key: Preferences.Key&lt;String&gt;): String? {
+    return dataStore.data.map { preferences ->
+      preferences[key]
+    }.first()
+  }
+}
+
+// Network Security Configuration
+// res/xml/network_security_config.xml
+&lt;?xml version="1.0" encoding="utf-8"?&gt;
+&lt;network-security-config&gt;
+  &lt;base-config cleartextTrafficPermitted="false"&gt;
+    &lt;trust-anchors&gt;
+      &lt;certificates src="system" /&gt;
+    &lt;/trust-anchors&gt;
+  &lt;/base-config&gt;
+  
+  &lt;domain-config cleartextTrafficPermitted="false"&gt;
+    &lt;domain includeSubdomains="true"&gt;api.example.com&lt;/domain&gt;
+    &lt;pin-set expiration="2026-12-31"&gt;
+      &lt;pin digest="SHA-256"&gt;BASE64_HASH_HERE&lt;/pin&gt;
+    &lt;/pin-set&gt;
+  &lt;/domain-config&gt;
+&lt;/network-security-config&gt;</pre>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="assets/js/main.js"></script>
+</body>
+</html>

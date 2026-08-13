@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Component Library — Moe Kyaw</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Orbitron:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/global.css" />
+  <link rel="stylesheet" href="assets/css/components.css" />
+  <link rel="stylesheet" href="assets/css/animations.css" />
+  <link rel="stylesheet" href="assets/css/responsive.css" />
+</head>
+<body>
+  <canvas id="particleCanvas" class="particle-canvas"></canvas>
+
+  <nav class="nav-glass glass-panel floating-ui">
+    <a class="nav-link" href="index.html">Home</a>
+    <a class="nav-link" href="page2.html">Skills</a>
+    <button id="langToggle" class="lang-toggle">🇲🇲 MM</button>
+  </nav>
+
+  <main class="container section-padding">
+    <section class="section-header cinematic-fade">
+      <h1 class="section-title">Component Library</h1>
+      <p class="section-subtitle">Reusable UI components with consistent API, theming, and accessibility.</p>
+    </section>
+
+    <section class="glass-panel cinematic-fade" style="padding: 40px;">
+      <h2 style="margin-bottom: 24px; color: var(--neon-pink);">Core Components</h2>
+      
+      <div class="content-grid">
+        <div class="info-card">
+          <h3>🔘 Buttons</h3>
+          <p>Primary, Secondary, Text, Icon</p>
+        </div>
+        <div class="info-card">
+          <h3>📝 Inputs</h3>
+          <p>TextField, Select, Checkbox, Radio</p>
+        </div>
+        <div class="info-card">
+          <h3>📊 Cards</h3>
+          <p>Info, Product, Profile cards</p>
+        </div>
+        <div class="info-card">
+          <h3>🔔 Feedback</h3>
+          <p>Snackbar, Dialog, Toast</p>
+        </div>
+      </div>
+
+      <div class="code-block" style="margin-top: 32px;">
+<pre>@Composable
+fun PrimaryButton(
+  text: String,
+  onClick: () -> Unit,
+  modifier: Modifier = Modifier,
+  enabled: Boolean = true,
+  isLoading: Boolean = false
+) {
+  Button(
+    onClick = onClick,
+    modifier = modifier
+      .height(48.dp)
+      .fillMaxWidth(),
+    enabled = enabled && !isLoading,
+    colors = ButtonDefaults.buttonColors(
+      containerColor = DesignTokens.Colors.Primary
+    )
+  ) {
+    if (isLoading) {
+      CircularProgressIndicator(
+        modifier = Modifier.size(20.dp),
+        color = Color.Black,
+        strokeWidth = 2.dp
+      )
+    } else {
+      Text(
+        text = text,
+        style = DesignTokens.Typography.Body.copy(
+          fontWeight = FontWeight.SemiBold,
+          color = Color.Black
+        )
+      )
+    }
+  }
+}
+
+@Composable
+fun AppTextField(
+  value: String,
+  onValueChange: (String) -> Unit,
+  label: String,
+  modifier: Modifier = Modifier,
+  isError: Boolean = false,
+  errorMessage: String? = null
+) {
+  OutlinedTextField(
+    value = value,
+    onValueChange = onValueChange,
+    label = { Text(label) },
+    modifier = modifier.fillMaxWidth(),
+    isError = isError,
+    colors = OutlinedTextFieldDefaults.colors(
+      focusedBorderColor = DesignTokens.Colors.Primary,
+      unfocusedBorderColor = Color.Gray
+    )
+  )
+  
+  if (isError && errorMessage != null) {
+    Text(
+      text = errorMessage,
+      color = DesignTokens.Colors.Error,
+      style = MaterialTheme.typography.bodySmall,
+      modifier = Modifier.padding(start = 16.dp, top = 4.dp)
+    )
+  }
+}</pre>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="assets/js/main.js"></script>
+</body>
+</html>

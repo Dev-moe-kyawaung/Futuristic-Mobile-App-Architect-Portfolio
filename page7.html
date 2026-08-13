@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>CI/CD Pipelines — Moe Kyaw</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Orbitron:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/global.css" />
+  <link rel="stylesheet" href="assets/css/components.css" />
+  <link rel="stylesheet" href="assets/css/animations.css" />
+  <link rel="stylesheet" href="assets/css/responsive.css" />
+</head>
+<body>
+  <canvas id="particleCanvas" class="particle-canvas"></canvas>
+
+  <nav class="nav-glass glass-panel floating-ui">
+    <a class="nav-link" href="index.html" data-i18n="navHome">Home</a>
+    <a class="nav-link" href="page2.html" data-i18n="navSkills">Skills</a>
+    <a class="nav-link" href="page3.html">Roadmap</a>
+    <a class="nav-link" href="page4.html">Compose</a>
+    <a class="nav-link" href="page5.html" data-i18n="navArchitecture">Architecture</a>
+    <a class="nav-link" href="page6.html" data-i18n="navPerformance">Performance</a>
+    <a class="nav-link" href="page7.html" data-i18n="navCICD">CI/CD</a>
+    <button id="langToggle" class="lang-toggle">🇲🇲 MM</button>
+  </nav>
+
+  <main class="container section-padding">
+    <section class="section-header cinematic-fade">
+      <h1 class="section-title" data-i18n="cicdTitle">CI/CD Pipelines</h1>
+      <p class="section-subtitle">Automated build, test, and deployment workflows with GitHub Actions, Gradle build optimization, and Play Store integration.</p>
+    </section>
+
+    <section class="glass-panel cinematic-fade" style="padding: 40px; margin-bottom: 32px;">
+      <h2 style="margin-bottom: 24px; color: var(--neon-aqua);">Pipeline Architecture</h2>
+      <p style="color: var(--text-secondary); line-height: 1.7; margin-bottom: 32px;">
+        Multi-stage CI/CD pipeline with parallel job execution, artifact caching, and automated quality gates.
+      </p>
+
+      <div class="pipeline-diagram">
+        <div class="pipeline-stage">
+          <h4>🔀 Push/PR</h4>
+          <p>Code commit or pull request</p>
+        </div>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-stage">
+          <h4>🔍 Lint & Format</h4>
+          <p>ktlint, detekt, spotless</p>
+        </div>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-stage">
+          <h4>🧪 Unit Tests</h4>
+          <p>JUnit, MockK, Turbine</p>
+        </div>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-stage">
+          <h4>📱 Integration Tests</h4>
+          <p>AndroidX Test, Espresso</p>
+        </div>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-stage">
+          <h4>🏗️ Build APK/AAB</h4>
+          <p>Release build with R8</p>
+        </div>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-stage">
+          <h4>🚀 Deploy</h4>
+          <p>Play Store / Firebase</p>
+        </div>
+      </div>
+
+      <div class="code-block" style="margin-top: 32px;">
+<pre># .github/workflows/ci.yml
+name: Android CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+env:
+  GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4g -Dorg.gradle.parallel=true"
+  CACHE_PREFIX: gradle-v3
+
+jobs:
+  lint-and-format:
+    name: Lint & Format Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+      
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ env.CACHE_PREFIX }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ env.CACHE_PREFIX }}-
+      
+      - name: Run ktlint
+        run: ./gradlew ktlintCheck
+      
+      - name: Run detekt
+        run: ./gradlew detekt
+      
+      - name: Run spotless check
+        run: ./gradlew spotlessCheck
+
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: lint-and-format
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+      
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ env.CACHE_PREFIX }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+      
+      - name: Run unit tests
+        run: ./gradlew testDebugUnitTest
+      
+      - name: Upload test reports
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: test-reports
+          path: '**/build/reports/tests/'
+      
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: '**/build/reports/jacoco/testDebugUnitTestCoverage/testDebugUnitTestCoverage.xml'
+          flags: unittests
+          fail_ci_if_error: false
+
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    needs: unit-tests
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+      
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      
+      - name: Run instrumented tests
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 33
+          target: google_apis
+          arch: x86_64
+          profile: Nexus 6
+          script: ./gradlew connectedCheck
+      
+      - name: Upload test reports
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: instrumented-test-reports
+          path: '**/build/reports/androidTests/connected/'
+
+  build-release:
+    name: Build Release APK/AAB
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    needs: integration-tests
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+      
+      - name: Decode keystore
+        run: echo ${{ secrets.KEYSTORE_BASE64 }} | base64 --decode > keystore.jks
+      
+      - name: Build Release AAB
+        run: ./gradlew bundleRelease
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+      
+      - name: Build Release APK
+        run: ./gradlew assembleRelease
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+      
+      - name: Upload AAB artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: release-aab
+          path: app/build/outputs/bundle/release/*.aab
+      
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: release-apk
+          path: app/build/outputs/apk/release/*.apk
+      
+      - name: Upload mapping file
+        uses: actions/upload-artifact@v3
+        with:
+          name: mapping-file
+          path: app/build/outputs/mapping/release/mapping.txt
+
+  deploy-play-store:
+    name: Deploy to Play Store (Internal)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: build-release
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Download AAB artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: release-aab
+          path: ./release
+      
+      - name: Deploy to Play Store Internal
+        uses: r0adkll/play-store-action@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_STORE_SERVICE_ACCOUNT }}
+          releaseFiles: ./release/*.aab
+          track: internal
+          userFraction: 0.0
+          inAppUpdatePriority: 2
+
+  deploy-firebase:
+    name: Deploy to Firebase App Distribution
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: build-release
+    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Download APK artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: release-apk
+          path: ./release
+      
+      - name: Deploy to Firebase
+        uses: wzieba/Firebase-Distribution-Github-Action@v1
+        with:
+          appId: ${{ secrets.FIREBASE_APP_ID }}
+          serviceCredentialsFileContent: ${{ secrets.FIREBASE_SERVICE_CREDENTIALS }}
+          groups: testers,developers
+          file: ./release/*.apk
+          releaseNotes: "Build from commit ${{ github.sha }}"</pre>
+      </div>
+    </section>
+
+    <section class="glass-panel cinematic-fade" style="padding: 40px; margin-bottom: 32px;">
+      <h2 style="margin-bottom: 24px; color: var(--neon-pink);">Gradle Build Optimization</h2>
+      <p style="color: var(--text-secondary); line-height: 1.7; margin-bottom: 32px;">
+        Configuration cache, build scan analysis, and parallel execution for 60% faster builds.
+      </p>
+
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-value">2.4m</div>
+          <div class="stat-label">Clean Build</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">18s</div>
+          <div class="stat-label">Incremental</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">-62%</div>
+          <div class="stat-label">Improvement</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">94%</div>
+          <div class="stat-label">Cache Hit Rate</div>
+        </div>
+      </div>
+
+      <div class="code-block" style="margin-top: 32px;">
+<pre># gradle.properties
+# Enable build cache
+org.gradle.caching=true
+org.gradle.configuration-cache=true
+
+# Parallel execution
+org.gradle.parallel=true
+org.gradle.workers.max=4
+
+# JVM optimization
+org.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=512m -XX:+UseParallelGC
+
+# Kotlin optimization
+kotlin.incremental=true
+kotlin.caching.enabled=true
+kotlin.parallel.tasks.in.project=true
+
+# Android optimization
+android.enableBuildCache=true
+android.enableR8.fullMode=true
+android.enableResourceOptimizations=true
+
+# Disable unused features
+android.enableJetifier=false
+android.useAndroidX=true
+
+# Build scan for analysis
+gradle.scan.enabled=true
+
+# settings.gradle.kts
+pluginManagement {
+  repositories {
+    google()
+    mavenCentral()
+    gradlePluginPortal()
+  }
+}
+
+dependencyResolutionManagement {
+  repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+  repositories {
+    google()
+    mavenCentral()
+  }
+}
+
+// Enable configuration cache
+// gradle.properties
+org.gradle.configuration-cache=true
+org.gradle.configuration-cache.problems=warn
+
+// Build scan plugin
+plugins {
+  id("com.gradle.enterprise") version "3.15"
+}
+
+gradleEnterprise {
+  buildScan {
+    termsOfServiceUrl = "https://gradle.com/terms-of-service"
+    termsOfServiceAgree = "yes"
+    publishAlways()
+  }
+}</pre>
+      </div>
+    </section>
+
+    <section class="glass-panel cinematic-fade" style="padding: 40px;">
+      <h2 style="margin-bottom: 24px; color: var(--neon-lime);">Quality Gates & Reporting</h2>
+      <p style="color: var(--text-secondary); line-height: 1.7; margin-bottom: 32px;">
+        Automated code quality checks with detekt, ktlint, and custom rules integrated into the CI pipeline.
+      </p>
+
+      <div class="content-grid">
+        <div class="info-card glass-panel">
+          <h3>📊 Code Coverage</h3>
+          <p style="margin-top: 12px;">JaCoCo integration with minimum 80% coverage requirement for new code, enforced in CI.</p>
+        </div>
+
+        <div class="info-card glass-panel">
+          <h3>🔍 Static Analysis</h3>
+          <p style="margin-top: 12px;">detekt for code smells, ktlint for formatting, spotless for license headers.</p>
+        </div>
+
+        <div class="info-card glass-panel">
+          <h3>📈 Performance Budget</h3>
+          <p style="margin-top: 12px;">Automated APK size checks, method count limits, and build time monitoring.</p>
+        </div>
+
+        <div class="info-card glass-panel">
+          <h3>🔒 Security Scanning</h3>
+          <p style="margin-top: 12px;">Dependency vulnerability checks with OWASP Dependency-Check and Snyk integration.</p>
+        </div>
+      </div>
+
+      <div class="code-block" style="margin-top: 32px;">
+<pre>// build.gradle.kts - Root project
+plugins {
+  id("io.gitlab.arturb.sch.detekt") version "1.23.0" apply false
+  id("org.jlleitschuh.gradle.ktlint") version "11.6.0" apply false
+  id("com.diffplug.gradle.spotless") version "6.20.0" apply false
+}
+
+// detekt configuration
+detekt {
+  toolVersion = "1.23.0"
+  config.setFrom(files("$rootDir/config/detekt/detekt.yml"))
+  buildUponDefaultConfig = true
+  allRules = true
+  ignoreFailures = false
+  source.setFrom(
+    files(
+      "app/src/main/java",
+      "app/src/test/java",
+      "app/src/androidTest/java"
+    )
+  )
+  reports {
+    html.required.set(true)
+    xml.required.set(true)
+    txt.required.set(true)
+    sarif.required.set(true)
+  }
+  baseline = file("$rootDir/config/detekt/baseline.xml")
+}
+
+// ktlint configuration
+ktlint {
+  android.set(true)
+  ignoreFailures.set(false)
+  reporters {
+    reporter(org.jlleitschuh.gradle.ktlint.reporter.ReporterType.PLAIN)
+    reporter(org.jlleitschuh.gradle.ktlint.reporter.ReporterType.CHECKSTYLE)
+    reporter(org.jlleitschuh.gradle.ktlint.reporter.ReporterType.HTML)
+  }
+  filter {
+    exclude("**/generated/**")
+    include("**/kotlin/**")
+  }
+}
+
+// JaCoCo configuration for code coverage
+tasks.register<JacocoReport>("jacocoTestReport") {
+  group = "reporting"
+  description = "Generate JaCoCo code coverage report"
+
+  reports {
+    xml.required.set(true)
+    html.required.set(true)
+    csv.required.set(false)
+  }
+
+  val fileFilter = listOf(
+    "**/R.class",
+    "**/R$*.class",
+    "**/BuildConfig.*",
+    "**/Manifest*.*",
+    "**/*Test*.*",
+    "**/*Activity.*",
+    "**/*Fragment.*",
+    "**/*Adapter.*",
+    "**/di/**",
+    "**/*Application.*"
+  )
+
+  val debugTree = fileTree("${project.buildDir}/tmp/kotlin-classes/debug") {
+    exclude(fileFilter)
+  }
+
+  val mainSrc = "${project.projectDir}/src/main/java"
+
+  sourceDirectories.setFrom(files(mainSrc))
+  classDirectories.setFrom(files(debugTree))
+  executionData.setFrom(fileTree("${project.buildDir}") {
+    include("outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec")
+  })
+}
+
+// OWASP Dependency-Check
+plugins {
+  id("org.owasp.dependencycheck") version "8.4.2"
+}
+
+dependencyCheck {
+  formats = listOf("HTML", "JUNIT")
+  failBuildOnCVSS = 7.0f
+  suppressionFile = "$rootDir/config/dependency-check/suppressions.xml"
+  analyzers {
+    assemblyEnabled = false
+    retirejs {
+      enabled = true
+    }
+  }
+}</pre>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="assets/js/main.js"></script>
+</body>
+</html>

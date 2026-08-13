@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Testing Strategy — Moe Kyaw</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Orbitron:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/global.css" />
+  <link rel="stylesheet" href="assets/css/components.css" />
+  <link rel="stylesheet" href="assets/css/animations.css" />
+  <link rel="stylesheet" href="assets/css/responsive.css" />
+</head>
+<body>
+  <canvas id="particleCanvas" class="particle-canvas"></canvas>
+
+  <nav class="nav-glass glass-panel floating-ui">
+    <a class="nav-link" href="index.html">Home</a>
+    <a class="nav-link" href="page2.html">Skills</a>
+    <a class="nav-link" href="page3.html">Roadmap</a>
+    <a class="nav-link" href="page4.html">Compose</a>
+    <a class="nav-link" href="page5.html">Architecture</a>
+    <a class="nav-link" href="page6.html">Performance</a>
+    <a class="nav-link" href="page7.html">CI/CD</a>
+    <button id="langToggle" class="lang-toggle">🇲🇲 MM</button>
+  </nav>
+
+  <main class="container section-padding">
+    <section class="section-header cinematic-fade">
+      <h1 class="section-title">Testing Strategy</h1>
+      <p class="section-subtitle">Comprehensive testing pyramid: unit tests, integration tests, UI tests, and end-to-end validation.</p>
+    </section>
+
+    <section class="glass-panel cinematic-fade" style="padding: 40px; margin-bottom: 32px;">
+      <h2 style="margin-bottom: 24px; color: var(--neon-aqua);">Testing Pyramid</h2>
+      
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-value">70%</div>
+          <div class="stat-label">Unit Tests</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">20%</div>
+          <div class="stat-label">Integration</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">10%</div>
+          <div class="stat-label">E2E Tests</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">85%</div>
+          <div class="stat-label">Coverage</div>
+        </div>
+      </div>
+
+      <div class="content-grid" style="margin-top: 32px;">
+        <div class="info-card glass-panel">
+          <h3>🧪 Unit Tests (JUnit + MockK)</h3>
+          <p style="margin-top: 12px;">ViewModel testing, Use Case validation, Repository mocks, and business logic verification.</p>
+        </div>
+
+        <div class="info-card glass-panel">
+          <h3>🔗 Integration Tests</h3>
+          <p style="margin-top: 12px;">Database operations with Room, Network calls with MockWebServer, DI container validation.</p>
+        </div>
+
+        <div class="info-card glass-panel">
+          <h3>📱 UI Tests (Compose Testing)</h3>
+          <p style="margin-top: 12px;">Semantic tree assertions, user interaction simulation, screenshot testing with Paparazzi.</p>
+        </div>
+
+        <div class="info-card glass-panel">
+          <h3>🎯 E2E Tests (Maestro)</h3>
+          <p style="margin-top: 12px;">Real device automation, critical user journey validation, regression testing.</p>
+        </div>
+      </div>
+
+      <div class="code-block" style="margin-top: 32px;">
+<pre>// Unit Test Example - ViewModel with MockK and Turbine
+@Test
+fun `given valid user id, when load profile, then success state emitted`() = runTest {
+  // Given
+  val mockUseCase = mockk&lt;GetUserProfileUseCase&gt;()
+  val expectedProfile = UserProfile(id = "123", name = "John Doe")
+  
+  coEvery { mockUseCase("123") } returns Result.success(expectedProfile)
+  
+  val viewModel = ProfileViewModel(mockUseCase)
+  
+  // When
+  val states = viewModel.uiState.toList()
+  
+  // Then
+  assertEquals(2, states.size)
+  assertTrue(states[0] is ProfileUiState.Loading)
+  assertTrue(states[1] is ProfileUiState.Success)
+  assertEquals(expectedProfile, (states[1] as ProfileUiState.Success).profile)
+}
+
+// Integration Test - Room Database
+@RunWith(AndroidJUnit4::class)
+class UserDaoTest {
+  
+  @get:Rule
+  val dbTestRule = InstantTaskExecutorRule()
+  
+  private lateinit var database: AppDatabase
+  private lateinit var userDao: UserDao
+  
+  @Before
+  fun setup() {
+    database = Room.inMemoryDatabaseBuilder(
+      InstrumentationRegistry.getInstrumentation().targetContext,
+      AppDatabase::class.java
+    ).build()
+    userDao = database.userDao()
+  }
+  
+  @After
+  fun teardown() {
+    database.close()
+  }
+  
+  @Test
+  fun insertAndRetrieveUser() = runBlocking {
+    // Given
+    val user = UserEntity(id = "123", name = "Test User")
+    
+    // When
+    userDao.insertUser(user)
+    val retrieved = userDao.getUserById("123")
+    
+    // Then
+    assertNotNull(retrieved)
+    assertEquals(user.id, retrieved?.id)
+    assertEquals(user.name, retrieved?.name)
+  }
+}
+
+// Compose UI Test
+@Test
+fun profileScreen_displaysUserInfo() {
+  val profile = UserProfile(id = "123", name = "John Doe", avatarUrl = "https://...")
+  
+  composeTestRule.setContent {
+    ProfileScreen(profile = profile)
+  }
+  
+  composeTestRule
+    .onNodeWithText("John Doe")
+    .assertIsDisplayed()
+  
+  composeTestRule
+    .onNodeWithTag("profileAvatar")
+    .assertExists()
+}
+
+// Maestro E2E Test - login-flow.yaml
+appId: com.example.app
+---
+- launchApp
+- tapOn: "Login"
+- inputText: "test@example.com"
+- tapOn: "Password"
+- inputText: "password123"
+- tapOn: "Sign In"
+- assertVisible: "Welcome back!"
+- assertVisible: "Home"</pre>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="assets/js/main.js"></script>
+</body>
+</html>

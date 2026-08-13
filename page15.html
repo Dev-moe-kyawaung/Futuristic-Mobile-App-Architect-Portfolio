@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Accessibility Audits — Moe Kyaw</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Orbitron:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/global.css" />
+  <link rel="stylesheet" href="assets/css/components.css" />
+  <link rel="stylesheet" href="assets/css/animations.css" />
+  <link rel="stylesheet" href="assets/css/responsive.css" />
+</head>
+<body>
+  <canvas id="particleCanvas" class="particle-canvas"></canvas>
+
+  <nav class="nav-glass glass-panel floating-ui">
+    <a class="nav-link" href="index.html">Home</a>
+    <a class="nav-link" href="page2.html">Skills</a>
+    <button id="langToggle" class="lang-toggle">🇲🇲 MM</button>
+  </nav>
+
+  <main class="container section-padding">
+    <section class="section-header cinematic-fade">
+      <h1 class="section-title">Accessibility Audits</h1>
+      <p class="section-subtitle">WCAG 2.1 compliance, screen reader support, and inclusive design patterns.</p>
+    </section>
+
+    <section class="glass-panel cinematic-fade" style="padding: 40px;">
+      <h2 style="margin-bottom: 24px; color: var(--neon-lime);">Accessibility Features</h2>
+      
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-value">100%</div>
+          <div class="stat-label">TalkBack Support</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">4.5:1</div>
+          <div class="stat-label">Contrast Ratio</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">AA</div>
+          <div class="stat-label">WCAG Level</div>
+        </div>
+      </div>
+
+      <div class="code-block" style="margin-top: 32px;">
+<pre>@Composable
+fun AccessibleButton(
+  onClick: () -> Unit,
+  modifier: Modifier = Modifier
+) {
+  Button(
+    onClick = onClick,
+    modifier = modifier
+      .semantics {
+        role = Role.Button
+        contentDescription = "Submit form"
+      }
+      .focusable()
+  ) {
+    Text(
+      "Submit",
+      modifier = Modifier.semantics {
+        fontSize = TextUnit(16, TextUnitType.Sp)
+        fontWeight = FontWeight.Bold
+      }
+    )
+  }
+}
+
+// Accessibility testing
+@Test
+fun button_hasProperAccessibility() {
+  composeTestRule.setContent {
+    AccessibleButton(onClick = {})
+  }
+  
+  composeTestRule
+    .onNodeWithContentDescription("Submit form")
+    .assertExists()
+    .assertIsEnabled()
+}</pre>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="assets/js/main.js"></script>
+</body>
+</html>

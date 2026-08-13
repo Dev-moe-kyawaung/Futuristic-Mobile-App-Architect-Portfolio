@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Monetization & Analytics — Moe Kyaw</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Orbitron:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/global.css" />
+  <link rel="stylesheet" href="assets/css/components.css" />
+  <link rel="stylesheet" href="assets/css/animations.css" />
+  <link rel="stylesheet" href="assets/css/responsive.css" />
+</head>
+<body>
+  <canvas id="particleCanvas" class="particle-canvas"></canvas>
+
+  <nav class="nav-glass glass-panel floating-ui">
+    <a class="nav-link" href="index.html">Home</a>
+    <a class="nav-link" href="page2.html">Skills</a>
+    <button id="langToggle" class="lang-toggle">🇲🇲 MM</button>
+  </nav>
+
+  <main class="container section-padding">
+    <section class="section-header cinematic-fade">
+      <h1 class="section-title">Monetization & Analytics</h1>
+      <p class="section-subtitle">In-app purchases, subscriptions, and comprehensive analytics tracking.</p>
+    </section>
+
+    <section class="glass-panel cinematic-fade" style="padding: 40px;">
+      <h2 style="margin-bottom: 24px; color: var(--neon-lime);">Revenue Stack</h2>
+      
+      <div class="content-grid">
+        <div class="info-card">
+          <h3>💳 In-App Purchases</h3>
+          <p>Google Play Billing Library</p>
+        </div>
+        <div class="info-card">
+          <h3>🔄 Subscriptions</h3>
+          <p>Recurring revenue model</p>
+        </div>
+        <div class="info-card">
+          <h3>📊 Analytics</h3>
+          <p>Firebase, Mixpanel, Amplitude</p>
+        </div>
+        <div class="info-card">
+          <h3>📈 A/B Testing</h3>
+          <p>Conversion optimization</p>
+        </div>
+      </div>
+
+      <div class="code-block" style="margin-top: 32px;">
+<pre>// Billing integration
+class BillingManager @Inject constructor(
+  private val context: Context
+) {
+  private val billingClient = BillingClient.newBuilder(context)
+    .setUpdatedConnectionListener { isReady ->
+      if (isReady) queryPurchases()
+    }
+    .build()
+  
+  fun startConnection() {
+    billingClient.startConnection()
+  }
+  
+  fun queryPurchases() {
+    billingClient.queryPurchasesAsync(
+      QueryPurchasesParams.newBuilder()
+        .setProductType(BillingClient.ProductType.SUBS)
+        .build()
+    ) { billingResult, purchases ->
+      if (billingResult.isOk && purchases != null) {
+        // Process active subscriptions
+        handlePurchases(purchases)
+      }
+    }
+  }
+  
+  fun launchBillingFlow(activity: Activity, productId: String) {
+    val flowParams = BillingFlowParams.newBuilder()
+      .setProductDetailsParamsList(
+        listOf(
+          ProductDetailsParams.newBuilder()
+            .setProductDetails(getProductDetails(productId))
+            .build()
+        )
+      )
+      .build()
+    
+    billingClient.launchBillingFlow(activity, flowParams)
+  }
+}
+
+// Analytics event tracking
+object Analytics {
+  fun trackScreenView(screenName: String) {
+    FirebaseAnalytics.getInstance().logEvent(
+      "screen_view",
+      bundle {
+        param(FirebaseAnalytics.Param.SCREEN_NAME, screenName)
+      }
+    )
+  }
+  
+  fun trackPurchase(productId: String, revenue: Double) {
+    FirebaseAnalytics.getInstance().logEvent(
+      "purchase",
+      bundle {
+        param(FirebaseAnalytics.Param.ITEM_ID, productId)
+        param(FirebaseAnalytics.Param.VALUE, revenue)
+      }
+    )
+  }
+}</pre>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="assets/js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Background Work — Moe Kyaw</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Orbitron:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/global.css" />
+  <link rel="stylesheet" href="assets/css/components.css" />
+  <link rel="stylesheet" href="assets/css/animations.css" />
+  <link rel="stylesheet" href="assets/css/responsive.css" />
+</head>
+<body>
+  <canvas id="particleCanvas" class="particle-canvas"></canvas>
+
+  <nav class="nav-glass glass-panel floating-ui">
+    <a class="nav-link" href="index.html">Home</a>
+    <a class="nav-link" href="page2.html">Skills</a>
+    <button id="langToggle" class="lang-toggle">🇲🇲 MM</button>
+  </nav>
+
+  <main class="container section-padding">
+    <section class="section-header cinematic-fade">
+      <h1 class="section-title">Background Work</h1>
+      <p class="section-subtitle">WorkManager, foreground services, and background task scheduling.</p>
+    </section>
+
+    <section class="glass-panel cinematic-fade" style="padding: 40px;">
+      <h2 style="margin-bottom: 24px; color: var(--neon-aqua);">Task Scheduling</h2>
+      
+      <div class="content-grid">
+        <div class="info-card">
+          <h3>⏰ WorkManager</h3>
+          <p>Deferrable, guaranteed background work</p>
+        </div>
+        <div class="info-card">
+          <h3>🔔 AlarmManager</h3>
+          <p>Exact timing, notifications</p>
+        </div>
+        <div class="info-card">
+          <h3>📍 Foreground Service</h3>
+          <p>Location tracking, media playback</p>
+        </div>
+        <div class="info-card">
+          <h3>🔄 Periodic Sync</h3>
+          <p>Regular data synchronization</p>
+        </div>
+      </div>
+
+      <div class="code-block" style="margin-top: 32px;">
+<pre>// WorkManager periodic sync
+class DataSyncWorker(
+  context: Context,
+  params: WorkerParameters
+) : CoroutineWorker(context, params) {
+  
+  override suspend fun doWork(): Result {
+    return try {
+      val repository = getKoin().get&lt;DataRepository&gt;()
+      repository.syncAllData()
+      Result.success()
+    } catch (e: Exception) {
+      if (runAttemptCount &lt; 3) Result.retry()
+      else Result.failure()
+    }
+  }
+}
+
+// Schedule periodic work
+val syncWork = PeriodicWorkRequestBuilder&lt;DataSyncWorker&gt;(
+  repeatInterval = 4,
+  repeatIntervalTimeUnit = TimeUnit.HOURS
+)
+  .setConstraints(
+    Constraints.Builder()
+      .setRequiredNetworkType(NetworkType.CONNECTED)
+      .setRequiresBatteryNotLow(false)
+      .setRequiresCharging(false)
+      .build()
+  )
+  .setBackoffCriteria(
+    BackoffPolicy.EXPONENTIAL,
+    WorkRequest.MIN_BACKOFF_MILLIS,
+    TimeUnit.MILLISECONDS
+  )
+  .build()
+
+WorkManager.getInstance(context).enqueue(syncWork)
+
+// One-time work with delay
+val uploadWork = OneTimeWorkRequestBuilder&lt;UploadWorker&gt;()
+  .setInitialDelay(10, TimeUnit.MINUTES)
+  .addTag("upload")
+  .build()
+
+WorkManager.getInstance(context).enqueue(uploadWork)</pre>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="assets/js/main.js"></script>
+</body>
+</html>

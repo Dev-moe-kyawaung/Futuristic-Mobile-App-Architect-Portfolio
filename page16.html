@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Internationalization — Moe Kyaw</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Orbitron:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/global.css" />
+  <link rel="stylesheet" href="assets/css/components.css" />
+  <link rel="stylesheet" href="assets/css/animations.css" />
+  <link rel="stylesheet" href="assets/css/responsive.css" />
+</head>
+<body>
+  <canvas id="particleCanvas" class="particle-canvas"></canvas>
+
+  <nav class="nav-glass glass-panel floating-ui">
+    <a class="nav-link" href="index.html">Home</a>
+    <a class="nav-link" href="page2.html">Skills</a>
+    <button id="langToggle" class="lang-toggle">🇲🇲 MM</button>
+  </nav>
+
+  <main class="container section-padding">
+    <section class="section-header cinematic-fade">
+      <h1 class="section-title">Internationalization</h1>
+      <p class="section-subtitle">Multi-language support with Burmese/English, RTL layouts, and locale-aware formatting.</p>
+    </section>
+
+    <section class="glass-panel cinematic-fade" style="padding: 40px;">
+      <h2 style="margin-bottom: 24px; color: var(--neon-aqua);">Localization Strategy</h2>
+      
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-value">2</div>
+          <div class="stat-label">Languages</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">100%</div>
+          <div class="stat-label">String Coverage</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">RTL</div>
+          <div class="stat-label">Layout Support</div>
+        </div>
+      </div>
+
+      <div class="code-block" style="margin-top: 32px;">
+<pre>// strings.xml (English)
+&lt;resources&gt;
+  &lt;string name="app_name"&gt;My App&lt;/string&gt;
+  &lt;string name="welcome"&gt;Welcome&lt;/string&gt;
+  &lt;string name="login"&gt;Login&lt;/string&gt;
+&lt;/resources&gt;
+
+// strings-mm.xml (Burmese)
+&lt;resources&gt;
+  &lt;string name="app_name"&gt;ကျွန်ုပ်၏ အပ်&lt;/string&gt;
+  &lt;string name="welcome"&gt;ကြိုဆိုပါတယ်&lt;/string&gt;
+  &lt;string name="login"&gt;ဝင်ရောက်မည်&lt;/string&gt;
+&lt;/resources&gt;
+
+// Compose localization
+@Composable
+fun LocalizedApp() {
+  val context = LocalContext.current
+  
+  MaterialTheme(
+    colorScheme = if (isSystemInDarkTheme()) darkScheme() else lightScheme()
+  ) {
+    Surface {
+      Column {
+        Text(stringResource(R.string.welcome))
+        Button(onClick = { /* TODO */ }) {
+          Text(stringResource(R.string.login))
+        }
+      }
+    }
+  }
+}
+
+// Locale configuration
+// AndroidManifest.xml
+&lt;application
+  android:localeConfig="@xml/locales_config"
+  ... &gt;
+  
+// res/xml/locales_config.xml
+&lt;locale-config xmlns:android="http://schemas.android.com/apk/res/android"&gt;
+  &lt;locale android:name="en"/&gt;
+  &lt;locale android:name="my"/&gt;
+&lt;/locale-config&gt;</pre>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="assets/js/main.js"></script>
+</body>
+</html>

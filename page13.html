@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Compose Theming Engine — Moe Kyaw</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Orbitron:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/global.css" />
+  <link rel="stylesheet" href="assets/css/components.css" />
+  <link rel="stylesheet" href="assets/css/animations.css" />
+  <link rel="stylesheet" href="assets/css/responsive.css" />
+</head>
+<body>
+  <canvas id="particleCanvas" class="particle-canvas"></canvas>
+
+  <nav class="nav-glass glass-panel floating-ui">
+    <a class="nav-link" href="index.html">Home</a>
+    <a class="nav-link" href="page2.html">Skills</a>
+    <button id="langToggle" class="lang-toggle">🇲🇲 MM</button>
+  </nav>
+
+  <main class="container section-padding">
+    <section class="section-header cinematic-fade">
+      <h1 class="section-title">Compose Theming Engine</h1>
+      <p class="section-subtitle">Material 3 design tokens, dynamic color support, and dark/light theme switching.</p>
+    </section>
+
+    <section class="glass-panel cinematic-fade" style="padding: 40px;">
+      <h2 style="margin-bottom: 24px; color: var(--neon-aqua);">Material 3 Design System</h2>
+      
+      <div class="content-grid">
+        <div class="info-card">
+          <h3>🎨 Color Tokens</h3>
+          <p>Primary, secondary, tertiary with light/dark variants</p>
+        </div>
+        <div class="info-card">
+          <h3>📐 Typography Scale</h3>
+          <p>Display, headline, title, body, label styles</p>
+        </div>
+        <div class="info-card">
+          <h3>🔲 Shape System</h3>
+          <p>ExtraSmall, Small, Medium, Large, ExtraLarge</p>
+        </div>
+        <div class="info-card">
+          <h3>🌈 Dynamic Color</h3>
+          <p>Material You support with Android 12+</p>
+        </div>
+      </div>
+
+      <div class="code-block" style="margin-top: 32px;">
+<pre>@Composable
+fun AppTheme(
+  darkTheme: Boolean = isSystemInDarkTheme(),
+  dynamicColor: Boolean = true,
+  content: @Composable () -> Unit
+) {
+  val colorScheme = when {
+    dynamicColor &amp;&amp; Build.VERSION.SDK_INT &gt;= Build.VERSION_CODES.S -&gt; {
+      val context = LocalContext.current
+      if (darkTheme) dynamicDarkColorScheme(context)
+      else dynamicLightColorScheme(context)
+    }
+    darkTheme -&gt; DarkColorScheme
+    else -&gt; LightColorScheme
+  }
+  
+  MaterialTheme(
+    colorScheme = colorScheme,
+    typography = Typography,
+    content = content
+  )
+}
+
+// Custom design tokens
+val AppDimensions = Dimensions(
+  spacing = Spacing(
+    xs = 4.dp,
+    sm = 8.dp,
+    md = 16.dp,
+    lg = 24.dp,
+    xl = 32.dp
+  ),
+  radius = Radius(
+    sm = 4.dp,
+    md = 8.dp,
+    lg = 16.dp,
+    xl = 24.dp
+  )
+)</pre>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="assets/js/main.js"></script>
+</body>
+</html>

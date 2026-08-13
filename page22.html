@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Offline-First Architecture — Moe Kyaw</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Orbitron:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/global.css" />
+  <link rel="stylesheet" href="assets/css/components.css" />
+  <link rel="stylesheet" href="assets/css/animations.css" />
+  <link rel="stylesheet" href="assets/css/responsive.css" />
+</head>
+<body>
+  <canvas id="particleCanvas" class="particle-canvas"></canvas>
+
+  <nav class="nav-glass glass-panel floating-ui">
+    <a class="nav-link" href="index.html">Home</a>
+    <a class="nav-link" href="page2.html">Skills</a>
+    <button id="langToggle" class="lang-toggle">🇲🇲 MM</button>
+  </nav>
+
+  <main class="container section-padding">
+    <section class="section-header cinematic-fade">
+      <h1 class="section-title">Offline-First Architecture</h1>
+      <p class="section-subtitle">Room database, WorkManager sync, and optimistic UI updates.</p>
+    </section>
+
+    <section class="glass-panel cinematic-fade" style="padding: 40px;">
+      <h2 style="margin-bottom: 24px; color: var(--neon-aqua);">Sync Strategy</h2>
+      
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-value">100%</div>
+          <div class="stat-label">Offline Support</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">&lt;1s</div>
+          <div class="stat-label">Cache Read</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">99%</div>
+          <div class="stat-label">Sync Success</div>
+        </div>
+      </div>
+
+      <div class="code-block" style="margin-top: 32px;">
+<pre>// Repository with offline-first pattern
+class UserRepositoryImpl @Inject constructor(
+  private val userDao: UserDao,
+  private val userApi: UserApi,
+  private val networkMonitor: NetworkMonitor
+) : UserRepository {
+  
+  override fun getUserStream(userId: String): Flow&lt;User?&gt; {
+    return userDao.getUserFlow(userId)
+  }
+  
+  override suspend fun refreshUser(userId: String): Result&lt;User&gt; {
+    return try {
+      val remoteUser = userApi.getUser(userId)
+      userDao.upsertUser(remoteUser.toEntity())
+      Result.success(remoteUser)
+    } catch (e: IOException) {
+      // Network error, return cached data
+      val cached = userDao.getUser(userId)
+      if (cached != null) {
+        Result.success(cached.toDomain())
+      } else {
+        Result.failure(e)
+      }
+    }
+  }
+  
+  override suspend fun updateUser(user: User): Result&lt;Unit&gt; {
+    // Optimistic update
+    userDao.upsertUser(user.toEntity())
+    
+    return try {
+      userApi.updateUser(user.toDto())
+      Result.success(Unit)
+    } catch (e: Exception) {
+      // Rollback on failure
+      userDao.deleteUser(user.id)
+      Result.failure(e)
+    }
+  }
+}
+
+// WorkManager for background sync
+class SyncWorker(
+  context: Context,
+  params: WorkerParameters
+) : CoroutineWorker(context, params) {
+  
+  override suspend fun doWork(): Result {
+    val repository = getKoin().get&lt;DataRepository&gt;()
+    
+    return try {
+      repository.syncAllData()
+      Result.success()
+    } catch (e: Exception) {
+      if (runAttemptCount &lt; 3) Result.retry()
+      else Result.failure()
+    }
+  }
+}</pre>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="assets/js/main.js"></script>
+</body>
+</html>

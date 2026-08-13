@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Network Layer — Moe Kyaw</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Orbitron:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/global.css" />
+  <link rel="stylesheet" href="assets/css/components.css" />
+  <link rel="stylesheet" href="assets/css/animations.css" />
+  <link rel="stylesheet" href="assets/css/responsive.css" />
+</head>
+<body>
+  <canvas id="particleCanvas" class="particle-canvas"></canvas>
+
+  <nav class="nav-glass glass-panel floating-ui">
+    <a class="nav-link" href="index.html">Home</a>
+    <a class="nav-link" href="page2.html">Skills</a>
+    <button id="langToggle" class="lang-toggle">🇲🇲 MM</button>
+  </nav>
+
+  <main class="container section-padding">
+    <section class="section-header cinematic-fade">
+      <h1 class="section-title">Network Layer</h1>
+      <p class="section-subtitle">Retrofit, OkHttp interceptors, and resilient API communication.</p>
+    </section>
+
+    <section class="glass-panel cinematic-fade" style="padding: 40px;">
+      <h2 style="margin-bottom: 24px; color: var(--neon-pink);">API Architecture</h2>
+      
+      <div class="content-grid">
+        <div class="info-card">
+          <h3>🔌 Retrofit</h3>
+          <p>Type-safe REST client</p>
+        </div>
+        <div class="info-card">
+          <h3>🔄 OkHttp</h3>
+          <p>Interceptors, caching, pooling</p>
+        </div>
+        <div class="info-card">
+          <h3>📦 Moshi/Gson</h3>
+          <p>JSON serialization</p>
+        </div>
+        <div class="info-card">
+          <h3>🛡️ Security</h3>
+          <p>Certificate pinning, auth</p>
+        </div>
+      </div>
+
+      <div class="code-block" style="margin-top: 32px;">
+<pre>// Network module
+@Module
+@InstallIn(SingletonComponent::class)
+object NetworkModule {
+  
+  @Provides
+  @Singleton
+  fun provideOkHttpClient(
+    logger: HttpLoggingInterceptor,
+    authInterceptor: AuthInterceptor
+  ): OkHttpClient {
+    return OkHttpClient.Builder()
+      .addInterceptor(logger)
+      .addInterceptor(authInterceptor)
+      .addInterceptor(ConnectivityInterceptor())
+      .addNetworkInterceptor { chain ->
+        val response = chain.proceed(chain.request())
+        response.newBuilder()
+          .header("Cache-Control", "max-age=300")
+          .build()
+      }
+      .connectTimeout(30, TimeUnit.SECONDS)
+      .readTimeout(30, TimeUnit.SECONDS)
+      .build()
+  }
+  
+  @Provides
+  @Singleton
+  fun provideRetrofit(okHttpClient: OkHttpClient): Retrofit {
+    return Retrofit.Builder()
+      .baseUrl("https://api.example.com/")
+      .client(okHttpClient)
+      .addConverterFactory(MoshiConverterFactory.create())
+      .addCallAdapterFactory(CoroutinesCallAdapterFactory())
+      .build()
+  }
+  
+  @Provides
+  @Singleton
+  fun provideUserApi(retrofit: Retrofit): UserApi {
+    return retrofit.create(UserApi::class.java)
+  }
+}
+
+// API service interface
+interface UserApi {
+  @GET("users/{id}")
+  suspend fun getUser(@Path("id") userId: String): UserDto
+  
+  @POST("users")
+  suspend fun createUser(@Body user: UserDto): UserDto
+  
+  @PUT("users/{id}")
+  suspend fun updateUser(
+    @Path("id") userId: String,
+    @Body user: UserDto
+  ): UserDto
+}</pre>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="assets/js/main.js"></script>
+</body>
+</html>

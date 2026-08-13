@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>State Management Patterns — Moe Kyaw</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Orbitron:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/global.css" />
+  <link rel="stylesheet" href="assets/css/components.css" />
+  <link rel="stylesheet" href="assets/css/animations.css" />
+  <link rel="stylesheet" href="assets/css/responsive.css" />
+</head>
+<body>
+  <canvas id="particleCanvas" class="particle-canvas"></canvas>
+
+  <nav class="nav-glass glass-panel floating-ui">
+    <a class="nav-link" href="index.html">Home</a>
+    <a class="nav-link" href="page2.html">Skills</a>
+    <button id="langToggle" class="lang-toggle">🇲🇲 MM</button>
+  </nav>
+
+  <main class="container section-padding">
+    <section class="section-header cinematic-fade">
+      <h1 class="section-title">State Management Patterns</h1>
+      <p class="section-subtitle">StateFlow, MVI architecture, and unidirectional data flow patterns.</p>
+    </section>
+
+    <section class="glass-panel cinematic-fade" style="padding: 40px;">
+      <h2 style="margin-bottom: 24px; color: var(--neon-lime);">MVI Implementation</h2>
+      
+      <div class="content-grid">
+        <div class="info-card">
+          <h3>📊 State</h3>
+          <p>Immutable UI state data class</p>
+        </div>
+        <div class="info-card">
+          <h3>🎯 Intent</h3>
+          <p>User action sealed class</p>
+        </div>
+        <div class="info-card">
+          <h3>⚡ ViewModel</h3>
+          <p>State reducer, event handler</p>
+        </div>
+        <div class="info-card">
+          <h3>🖥️ UI</h3>
+          <p>State collector, intent sender</p>
+        </div>
+      </div>
+
+      <div class="code-block" style="margin-top: 32px;">
+<pre>// MVI Pattern Implementation
+sealed class ProfileIntent {
+  data class LoadProfile(val userId: String) : ProfileIntent()
+  data class UpdateName(val name: String) : ProfileIntent()
+  object SaveProfile : ProfileIntent()
+}
+
+data class ProfileState(
+  val isLoading: Boolean = false,
+  val profile: UserProfile? = null,
+  val error: String? = null,
+  val isDirty: Boolean = false
+)
+
+class ProfileViewModel @Inject constructor(
+  private val getProfile: GetProfileUseCase,
+  private val saveProfile: SaveProfileUseCase
+) : ViewModel() {
+  
+  private val _state = MutableStateFlow(ProfileState())
+  val state: StateFlow&lt;ProfileState&gt; = _state.asStateFlow()
+  
+  private val _events = Channel&lt;ProfileEvent&gt;()
+  val events: Flow&lt;ProfileEvent&gt; = _events.receiveAsFlow()
+  
+  fun onIntent(intent: ProfileIntent) {
+    when (intent) {
+      is ProfileIntent.LoadProfile -> loadProfile(intent.userId)
+      is ProfileIntent.UpdateName -> updateName(intent.name)
+      ProfileIntent.SaveProfile -> saveProfile()
+    }
+  }
+  
+  private fun loadProfile(userId: String) {
+    viewModelScope.launch {
+      _state.update { it.copy(isLoading = true) }
+      getProfile(userId)
+        .onSuccess { profile ->
+          _state.update { it.copy(profile = profile, isLoading = false) }
+        }
+        .onFailure { error ->
+          _state.update { 
+            it.copy(error = error.message, isLoading = false) 
+          }
+        }
+    }
+  }
+  
+  private fun updateName(name: String) {
+    _state.update { 
+      it.copy(
+        profile = it.profile?.copy(name = name),
+        isDirty = true
+      )
+    }
+  }
+  
+  private fun saveProfile() {
+    viewModelScope.launch {
+      val currentProfile = _state.value.profile
+      if (currentProfile != null) {
+        saveProfile(currentProfile)
+          .onSuccess { _events.send(ProfileEvent.ProfileSaved) }
+          .onFailure { error ->
+            _state.update { it.copy(error = error.message) }
+          }
+      }
+    }
+  }
+}
+
+sealed class ProfileEvent {
+  object ProfileSaved : ProfileEvent()
+  data class ShowError(val message: String) : ProfileEvent()
+}</pre>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="assets/js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Dynamic Feature Modules — Moe Kyaw</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Orbitron:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/global.css" />
+  <link rel="stylesheet" href="assets/css/components.css" />
+  <link rel="stylesheet" href="assets/css/animations.css" />
+  <link rel="stylesheet" href="assets/css/responsive.css" />
+</head>
+<body>
+  <canvas id="particleCanvas" class="particle-canvas"></canvas>
+
+  <nav class="nav-glass glass-panel floating-ui">
+    <a class="nav-link" href="index.html">Home</a>
+    <a class="nav-link" href="page2.html">Skills</a>
+    <button id="langToggle" class="lang-toggle">🇲🇲 MM</button>
+  </nav>
+
+  <main class="container section-padding">
+    <section class="section-header cinematic-fade">
+      <h1 class="section-title">Dynamic Feature Modules</h1>
+      <p class="section-subtitle">On-demand delivery with Play Feature Delivery for reduced initial download size.</p>
+    </section>
+
+    <section class="glass-panel cinematic-fade" style="padding: 40px;">
+      <h2 style="margin-bottom: 24px; color: var(--neon-pink);">Play Feature Delivery</h2>
+      
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-value">-40%</div>
+          <div class="stat-label">Initial APK Size</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">3</div>
+          <div class="stat-label">Dynamic Features</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">98%</div>
+          <div class="stat-label">Install Success</div>
+        </div>
+      </div>
+
+      <div class="code-block" style="margin-top: 32px;">
+<pre>// Dynamic feature module configuration
+// feature:onboarding/build.gradle.kts
+plugins {
+  id("com.android.dynamic-feature")
+  kotlin("android")
+}
+
+android {
+  namespace = "com.example.app.feature.onboarding"
+}
+
+dependencies {
+  implementation(project(":app"))
+  implementation(project(":core:ui"))
+  implementation(project(":core:network"))
+}
+
+// Installation with Play Core
+class FeatureInstaller @Inject constructor(
+  private val context: Context
+) {
+  private val splitInstallManager = SplitInstallManagerFactory.getInstance(context)
+  
+  suspend fun installOnboardingFeature(): Result {
+    val request = SplitInstallRequest.newBuilder()
+      .addFeature("onboarding")
+      .build()
+    
+    return try {
+      splitInstallManager.startInstall(request).await()
+      Result.success()
+    } catch (e: Exception) {
+      Result.failure(e)
+    }
+  }
+}</pre>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="assets/js/main.js"></script>
+</body>
+</html>

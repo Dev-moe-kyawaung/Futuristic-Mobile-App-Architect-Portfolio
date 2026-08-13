@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Skills Matrix — Moe Kyaw</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  /css/global.css" />
+  /css/components.css" />
+  /css/animations.css" />
+</head>
+<body>
+  anvas id="particleCanvas" class="particle-canvas"></canvas>
+
+  <nav class="nav-glass glass-panel floating-ui">
+    <a class="nav-link" href="index.html">Home</a>
+    <a class="nav-link" href="skills.html">Skills</a>
+    <a class="nav-link" href="roadmap.html">Roadmap</a>
+    <a class="nav-link" href="compose-ui.html">Compose</a>
+    <a class="nav-link" href="architecture.html">Architecture</a>
+    <a class="nav-link" href="performance.html">Performance</a>
+    <a class="nav-link" href="cicd.html">CI/CD</a>
+    <button id="langToggle" class="lang-toggle">🇲🇲 MM</button>
+  </nav>
+
+  <main style="padding: 120px 24px 80px; max-width: 1100px; margin: 0 auto;">
+    <section class="glass-panel cinematic-fade" style="padding: 40px;">
+      <h2 data-i18n="skillsTitle" style="margin-bottom: 24px;">Skills Matrix</h2>
+      <div style="height: 420px; position: relative;">
+        anvas id="skillRadar"></canvas>
+      </div>
+    </section>
+
+    <section class="glass-panel cinematic-fade" style="padding: 40px; margin-top: 32px;">
+      <h3>Core Android Stack</h3>
+      <ul style="margin-top: 16px; line-height: 1.8; color: var(--text-secondary);">
+        >Kotlin, Coroutines, Flow</li>
+        >Jetpack Compose, Navigation, Hilt</li>
+        >Clean Architecture, MVVM, MVI</li>
+        >Performance profiling, Memory leak detection</li>
+        >CI/CD with GitHub Actions, Gradle build optimization</li>
+      </ul>
+    </section>
+  </main>
+
+  <script type="module" src="assets/js/main.js"></script>
+</body>
+</html>

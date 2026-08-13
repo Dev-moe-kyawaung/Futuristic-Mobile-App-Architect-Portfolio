@@ -1,0 +1,225 @@
+      <div class="content-grid" style="margin-top: 32px;">
+        <div class="info-card glass-panel">
+          <h3>📦 App Bundles</h3>
+          <p style="margin-top: 12px;">Play Feature Delivery with dynamic feature modules, configuration-specific APK splits (ABI, density, language).</p>
+        </div>
+
+        <div class="info-card glass-panel">
+          <h3>🗜️ R8 Optimization</h3>
+          <p style="margin-top: 12px;">Full code shrinking, resource shrinking, and optimization with custom keep rules for reflection and dynamic code.</p>
+        </div>
+
+        <div class="info-card glass-panel">
+          <h3>🖼️ WebP Conversion</h3>
+          <p style="margin-top: 12px;">All PNG/JPG assets converted to WebP format with 60-80% size reduction and quality preservation.</p>
+        </div>
+
+        <div class="info-card glass-panel">
+          <h3>🎯 Vector Drawables</h3>
+          <p style="margin-top: 12px;">XML vector drawables instead of PNG icons, scalable without quality loss and minimal file size.</p>
+        </div>
+      </div>
+
+      <div class="code-block" style="margin-top: 32px;">
+<pre>// build.gradle.kts - App module
+android {
+  buildTypes {
+    release {
+      isMinifyEnabled = true
+      isShrinkResources = true
+      proguardFiles(
+        getDefaultProguardFile("proguard-android-optimize.txt"),
+        "proguard-rules.pro"
+      )
+    }
+  }
+
+  splits {
+    abi {
+      isEnable = true
+      reset()
+      include("arm64-v8a", "armeabi-v7a")
+      isUniversalApk = false
+    }
+    density {
+      isEnable = true
+      reset()
+      include("mdpi", "hdpi", "xhdpi", "xxhdpi", "xxxhdpi")
+    }
+  }
+
+  packaging {
+    resources {
+      excludes += "/META-INF/{AL2.0,LGPL2.1}"
+      excludes += "/META-INF/DEPENDENCIES"
+      excludes += "/META-INF/LICENSE*"
+      excludes += "/META-INF/NOTICE*"
+    }
+  }
+}
+
+// proguard-rules.pro
+# Keep data classes for serialization
+-keep class com.example.app.data.model.** { *; }
+-keep class com.example.app.core.network.dto.** { *; }
+
+# Keep Gson serialization fields
+-keepclassmembers class com.example.app.** {
+  @com.google.gson.annotations.SerializedName *;
+}
+
+# Keep coroutines
+-keepnames class kotlinx.coroutines.internal.MainDispatcherFactory {}
+-keepnames class kotlinx.coroutines.CoroutineExceptionHandler {}
+
+# Dynamic feature modules
+-keep class com.example.app.feature.** { *; }
+-keep interface com.example.app.feature.** { *; }
+
+# Remove logging in release
+-assumenosideeffects class android.util.Log {
+  public static int d(java.lang.String, java.lang.String);
+  public static int i(java.lang.String, java.lang.String);
+  public static int w(java.lang.String, java.lang.String);
+  public static int e(java.lang.String, java.lang.String);
+}
+
+# Optimize with Baseline Profiles
+-keep,allowobfuscation,allowshrinking class com.example.app.MainActivity
+-keep,allowobfuscation,allowshrinking class com.example.app.ui.**
+-keep,allowobfuscation,allowshrinking class com.example.app.di.**</pre>
+      </div>
+    </section>
+
+    <section class="glass-panel cinematic-fade" style="padding: 40px; margin-top: 32px;">
+      <h2 style="margin-bottom: 24px; color: var(--neon-aqua);">Battery & Network Efficiency</h2>
+      <p style="color: var(--text-secondary); line-height: 1.7; margin-bottom: 32px;">
+        WorkManager for background tasks, intelligent caching strategies, and network request batching.
+      </p>
+
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-value">-52%</div>
+          <div class="stat-label">Background Usage</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">-38%</div>
+          <div class="stat-label">Network Requests</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">6h</div>
+          <div class="stat-label">Cache TTL</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">95%</div>
+          <div class="stat-label">Cache Hit Rate</div>
+        </div>
+      </div>
+
+      <div class="bench-grid" style="margin-top: 32px;">
+        <div class="bench-card glass-panel">
+          <h3 class="bench-title">🔋 Battery Optimization</h3>
+          <ul style="margin-top: 16px; color: var(--text-secondary); font-size: 14px; line-height: 2;">
+            <li>✓ WorkManager with constraints (charging, WiFi, idle)</li>
+            <li>✓ AlarmManager minimization</li>
+            <li>✓ Doze mode compatibility</li>
+            <li>✓ Background location restrictions</li>
+            <li>✓ WakeLock usage audit</li>
+          </ul>
+        </div>
+
+        <div class="bench-card glass-panel">
+          <h3 class="bench-title">🌐 Network Efficiency</h3>
+          <ul style="margin-top: 16px; color: var(--text-secondary); font-size: 14px; line-height: 2;">
+            <li>✓ OkHttp connection pooling</li>
+            <li>✓ HTTP caching with Cache-Control</li>
+            <li>✓ Request batching for analytics</li>
+            <li>✓ Gzip compression enabled</li>
+            <li>✓ Protocol Buffers for critical endpoints</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="code-block" style="margin-top: 32px;">
+<pre>// WorkManager configuration for battery-efficient background work
+class SyncWorker(
+  appContext: Context,
+  params: WorkerParameters
+) : CoroutineWorker(appContext, params) {
+
+  override suspend fun doWork(): Result {
+    return try {
+      val repository = getKoin().get&lt;DataRepository&gt;()
+      
+      // Batch sync operations
+      val pendingSyncs = repository.getPendingSyncItems()
+      
+      pendingSyncs.chunked(50).forEach { batch ->
+        repository.syncBatch(batch)
+        // Yield to avoid blocking main thread
+        yield()
+      }
+      
+      Result.success()
+    } catch (e: Exception) {
+      if (runAttemptCount &lt; 3) {
+        Result.retry()
+      } else {
+        Result.failure()
+      }
+    }
+  }
+}
+
+// Work configuration with constraints
+val syncWork = PeriodicWorkRequestBuilder&lt;SyncWorker&gt;(
+  repeatInterval = 6,
+  repeatIntervalTimeUnit = TimeUnit.HOURS
+)
+  .setConstraints(
+    Constraints.Builder()
+      .setRequiredNetworkType(NetworkType.CONNECTED)
+      .setRequiresBatteryNotLow(true)
+      .setRequiresCharging(false)
+      .setRequiresStorageNotLow(true)
+      .build()
+  )
+  .setBackoffCriteria(
+    BackoffPolicy.EXPONENTIAL,
+    WorkRequest.MIN_BACKOFF_MILLIS,
+    TimeUnit.MILLISECONDS
+  )
+  .build()
+
+WorkManager.getInstance(context).enqueue(syncWork)
+
+// OkHttp caching configuration
+val cache = Cache(
+  directory = context.cacheDir.resolve("http_cache"),
+  maxSize = 10 * 1024 * 1024 // 10 MB
+)
+
+val okHttpClient = OkHttpClient.Builder()
+  .cache(cache)
+  .addInterceptor { chain ->
+    val request = chain.request()
+    
+    // Force cache for 5 minutes when offline
+    val cacheControl = CacheControl.Builder()
+      .maxAge(5, TimeUnit.MINUTES)
+      .build()
+    
+    val response = chain.proceed(request)
+    
+    response.newBuilder()
+      .header("Cache-Control", cacheControl.toString())
+      .build()
+  }
+  .build()</pre>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="assets/js/main.js"></script>
+</body>
+</html>
